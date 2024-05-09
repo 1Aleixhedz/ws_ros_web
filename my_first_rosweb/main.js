@@ -1,14 +1,13 @@
 document.addEventListener('DOMContentLoaded', event => {
     console.log("entro en la pagina")
-
+    
     document.getElementById("btn_con").addEventListener("click", connect)
     document.getElementById("btn_dis").addEventListener("click", disconnect)
     document.getElementById("btn_move").addEventListener("click", move)
     document.getElementById("btn_stop").addEventListener("click", stop)
     document.getElementById("btn_change_direction").addEventListener("click", changeDirection)
-    document.getElementById("btn_toggle_cage").addEventListener("click", toggleCage)
 
-    let data = {
+    data = {
         // ros connection
         ros: null,
         rosbridge_address: 'ws://127.0.0.1:9090/',
@@ -19,32 +18,6 @@ document.addEventListener('DOMContentLoaded', event => {
         position: {
             x: 0,
             y: 0
-        },
-        // cage mode flag
-        cageMode: false,
-        // cage vertices
-        cageVertices: [
-            { x: -1.5, y: -0.5 },
-            { x: -1.5, y: -1.5 },
-            { x: -2.5, y: -0.5 },
-            { x: -2.5, y: -1.5 }
-        ]
-    }
-
-    function toggleCage() {
-        data.cageMode = !data.cageMode;
-        console.log("Cage mode toggled:", data.cageMode ? "On" : "Off");
-    }
-
-    function move() {
-        // If not in cage mode, move normally
-        if (!data.cageMode) {
-            console.log("Moving...");
-            // Add your move logic here
-        } else {
-            console.log("Moving within cage...");
-            // Implement move logic within cage here
-            // For demonstration purposes, let's just print a message
         }
     }
 
@@ -88,6 +61,28 @@ document.addEventListener('DOMContentLoaded', event => {
         data.connected = false
         console.log('Clic en botón de desconexión')
     }   
+    
+    function move() {
+        let topic = new ROSLIB.Topic({
+            ros: data.ros,
+            name: '/cmd_vel',
+            messageType: 'geometry_msgs/msg/Twist'
+        })
+
+        let linearVelocity = 0.1; // Default linear velocity
+        let angularVelocity = -0.2; // Default angular velocity
+
+        if (data.direction === 'backward') {
+            // If the direction is backward, reverse the linear velocity
+            linearVelocity = -0.1;
+        }
+
+        let message = new ROSLIB.Message({
+            linear: {x: linearVelocity, y: 0, z: 0 },
+            angular: {x: 0, y: 0, z: angularVelocity },
+        })
+        topic.publish(message)
+    }
 
     function stop() {
         let topic = new ROSLIB.Topic({
@@ -114,5 +109,4 @@ document.addEventListener('DOMContentLoaded', event => {
             console.log('Direction changed to forward');
         }
     }
-
 });
